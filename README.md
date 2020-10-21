@@ -1,2 +1,2 @@
 # WebSiteELBIaC
-Build AWS website with Terraform
+Build an AWS website with Terraform Infrastructure as Code
