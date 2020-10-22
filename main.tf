@@ -1,8 +1,12 @@
+#---------------------------------#
+# Deploys two webservers to AWS   #
+#---------------------------------#
+
 # Configure AWS connection, secrets are in terraform.tfvars
 provider "aws" {
-  access_key = "${var.access_key}"
-  secret_key = "${var.secret_key}"
-  region     = "${var.region}"
+  access_key = "var.access_key"
+  secret_key = "var.secret_key"
+  region     = "var.region"
 }
 
 # Get availability zones for the region specified in var.region
@@ -13,7 +17,7 @@ resource "aws_autoscaling_policy" "mainweb-asg-policy-1" {
   name                   = "mainweb-asg-policy"
   policy_type            = "TargetTrackingScaling"
   adjustment_type        = "ChangeInCapacity"
-  autoscaling_group_name = "${aws_autoscaling_group.mainweb-asg.name}"
+  autoscaling_group_name = "aws_autoscaling_group.mainweb-asg.name"
 
   target_tracking_configuration {
     predefined_metric_specification {
@@ -26,13 +30,13 @@ resource "aws_autoscaling_policy" "mainweb-asg-policy-1" {
 # Create an autoscaling group
 resource "aws_autoscaling_group" "mainweb-asg" {
   name = "mainweb-asg"
-  launch_configuration = "${aws_launch_configuration.mainweb-lc.id}"
-  availability_zones = ["${data.aws_availability_zones.all.names}"]
+  launch_configuration = "aws_launch_configuration.mainweb-lc.id"
+  availability_zones = ["data.aws_availability_zones.all.names"]
 
   min_size = 2
   max_size = 10
 
-  load_balancers = ["${aws_elb.mainweb-elb.name}"]
+  load_balancers = ["aws_elb.mainweb-elb.name"]
   health_check_type = "ELB"
 
   tag {
@@ -47,10 +51,10 @@ resource "aws_launch_configuration" "mainweb-lc" {
   name = "mainweb-lc"
   image_id = "ami-5652ce39"
   instance_type = "t2.nano"
-  key_name = "${var.key_name}"
-  security_groups = ["${aws_security_group.mainweb-lc-sg.id}"]
+  key_name = "var.key_name"
+  security_groups = ["aws_security_group.mainweb-lc-sg.id"]
 
-  iam_instance_profile = "${var.iam_instance_profile}"
+  iam_instance_profile = "var.iam_instance_profile"
 
   user_data = <<-EOF
               #!/bin/bash
@@ -70,8 +74,8 @@ resource "aws_launch_configuration" "mainweb-lc" {
 # Create the ELB
 resource "aws_elb" "mainweb-elb" {
   name = "mainweb-elb"
-  security_groups = ["${aws_security_group.mainweb-elb-sg.id}"]
-  availability_zones = ["${data.aws_availability_zones.all.names}"]
+  security_groups = ["aws_security_group.mainweb-elb-sg.id"]
+  availability_zones = ["data.aws_availability_zones.all.names"]
 
   health_check {
     healthy_threshold = 2
@@ -86,7 +90,7 @@ resource "aws_elb" "mainweb-elb" {
   listener {
     lb_port = 80
     lb_protocol = "http"
-    instance_port = "${var.server_port}"
+    instance_port = "var.server_port"
     instance_protocol = "http"
   }
 }
@@ -97,15 +101,15 @@ resource "aws_security_group" "mainweb-lc-sg" {
 
   # Inbound HTTP from anywhere
   ingress {
-    from_port = "${var.server_port}"
-    to_port = "${var.server_port}"
+    from_port = "var.server_port"
+    to_port = "var.server_port"
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port = "${var.ssh_port}"
-    to_port = "${var.ssh_port}"
+    from_port = "var.ssh_port"
+    to_port = "var.ssh_port"
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -136,8 +140,8 @@ resource "aws_security_group" "mainweb-elb-sg" {
 
   # Inbound HTTP from anywhere
   ingress {
-    from_port = "${var.server_port}"
-    to_port = "${var.server_port}"
+    from_port = "var.server_port"
+    to_port = "var.server_port"
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
